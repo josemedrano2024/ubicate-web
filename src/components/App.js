@@ -21,9 +21,6 @@ import EditProfile from "./EditProfile";
 import { auth } from "../services/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-// Estilos globales
-import "./App.css";
-
 function App() {
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -39,10 +36,10 @@ function App() {
 
   if (loading) {
     return (
-      <div className="pantalla-carga">
-        <img src="/src/assets/Logo.jpeg" alt="Logo" className="logo-carga" />
-        <p className="eslogan">¡Lo que buscas cerca de ti!</p>
-        <div className="cargador"></div>
+      <div className="d-flex justify-content-center align-items-center vh-100 bg-primary">
+        <div className="spinner-border text-white" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
       </div>
     );
   }
