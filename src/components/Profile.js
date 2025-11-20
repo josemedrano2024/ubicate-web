@@ -86,8 +86,8 @@ function Profile() {
   return (
     <div style={{ backgroundColor: "#0b4bb0", minHeight: "100vh" }}>
       {/* Back Button */}
-      <a
-        href="/home"
+      <Link
+        to="/home"
         className="back-button"
         style={{
           marginTop: "20px",
@@ -104,7 +104,7 @@ function Profile() {
         }}
       >
         <i className="bi bi-arrow-left"></i> Volver a la aplicación
-      </a>
+      </Link>
 
       <Container style={{ paddingTop: "100px" }}>
         <Row className="justify-content-center">
