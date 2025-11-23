@@ -84,29 +84,31 @@ function Profile() {
   const isAnonymous = user?.isAnonymous;
 
   return (
-    <div style={{ backgroundColor: "#0b4bb0", minHeight: "100vh" }}>
-      {/* Back Button */}
-      <Link
-        to="/home"
-        className="back-button"
-        style={{
-          marginTop: "20px",
-          position: "fixed",
-          top: "80px",
-          left: "20px",
-          zIndex: 1000,
-          backgroundColor: "#ffffff",
-          padding: "10px 15px",
-          borderRadius: "5px",
-          textDecoration: "none",
-          color: "#0b4bb0",
-          marginTop: "10px",
-        }}
-      >
-        <i className="bi bi-arrow-left"></i> Volver a la aplicación
-      </Link>
+    <div
+      style={{
+        backgroundColor: "#0b4bb0",
+        minHeight: "100vh",
+        padding: "20px 0",
+      }}
+    >
+      <Container>
+        {/* Botón Volver - Posicionado correctamente */}
+        <div className="mb-4">
+          <Link
+            to="/home"
+            className="btn btn-outline-light"
+            style={{
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              fontWeight: "500",
+            }}
+          >
+            <i className="bi bi-arrow-left"></i> Volver a la aplicación
+          </Link>
+        </div>
 
-      <Container style={{ paddingTop: "100px" }}>
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
             <Card className="user-info-card">
@@ -162,9 +164,9 @@ function Profile() {
                   <div className="alert alert-info mt-3">
                     <i className="bi bi-info-circle"></i>
                     Eres un usuario invitado.{" "}
-                    <a href="/register" className="alert-link">
+                    <Link to="/register" className="alert-link">
                       Regístrate
-                    </a>
+                    </Link>
                     para guardar tu información permanentemente.
                   </div>
                 )}
@@ -213,7 +215,6 @@ function Profile() {
         .user-info-card {
           border-radius: 15px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-          margin-top: 20px;
           border: none;
         }
 
@@ -233,21 +234,11 @@ function Profile() {
 
         @media (max-width: 768px) {
           .container {
-            padding-top: 80px;
+            padding: 0 15px;
           }
 
           .user-details {
             font-size: 0.9rem;
-          }
-
-          .back-button {
-            position: relative;
-            top: auto;
-            left: auto;
-            margin-bottom: 20px;
-            background-color: #ffffff;
-            margin-top: -20px;
-            margin-end: 100px;
           }
         }
       `}</style>

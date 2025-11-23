@@ -1,4 +1,3 @@
-// src/components/Home.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Alert } from "react-bootstrap";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
@@ -762,7 +761,6 @@ function Home() {
           </div>
         </div>
       </nav>
-
       {/* Barra de búsqueda */}
       <div className="search-container">
         <input
@@ -778,7 +776,6 @@ function Home() {
           Buscar
         </button>
       </div>
-
       {/* Filtro por categoría */}
       <div className="search-container">
         <select
@@ -805,7 +802,6 @@ function Home() {
           </div>
         )}
       </div>
-
       {/* Mapa */}
       <div id="map" style={{ height: "55vh", width: "100%", zIndex: 1 }}>
         <MapContainer
@@ -924,7 +920,6 @@ function Home() {
           )}
         </div>
       </div>
-
       {/* Botones flotantes*/}
       <div className="botones-flotantes">
         <button
@@ -935,13 +930,11 @@ function Home() {
           <i className="bi bi-heart-fill"></i>
         </button>
       </div>
-
       <footer className="mt-5 py-4">
         <div className="container text-center text-white">
           <p>&copy; 2023 Ubicate - Todos los derechos reservados</p>
         </div>
       </footer>
-
       {/* Estilos CSS */}
       <style jsx>{`
         @keyframes pulse {
