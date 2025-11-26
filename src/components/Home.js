@@ -130,6 +130,7 @@ function Home() {
   const [resultCount, setResultCount] = useState(0);
   const [locationAccuracy, setLocationAccuracy] = useState(null);
   const [isWatchingLocation, setIsWatchingLocation] = useState(false);
+  const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
   const mapRef = useRef();
   const locationWatchIdRef = useRef(null);
@@ -191,6 +192,9 @@ function Home() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
+      if (user) {
+        loadUserFavorites(user.uid);
+      }
     });
 
     // Iniciar seguimiento de ubicación en tiempo real
@@ -201,6 +205,27 @@ function Home() {
       stopLocationTracking();
     };
   }, []);
+
+  // Cargar favoritos del usuario
+  const loadUserFavorites = async (userId) => {
+    try {
+      const userFavRef = doc(
+        firestore,
+        "ubicate",
+        "usuarios",
+        "favoritos",
+        userId
+      );
+      const favDoc = await getDoc(userFavRef);
+
+      if (favDoc.exists()) {
+        const userFavorites = favDoc.data().negocios || [];
+        setFavorites(userFavorites);
+      }
+    } catch (error) {
+      console.error("Error cargando favoritos:", error);
+    }
+  };
 
   // Centrar mapa cuando se obtiene la ubicación del usuario
   useEffect(() => {
@@ -487,60 +512,27 @@ function Home() {
         ? favDoc.data().negocios || []
         : [];
 
+      let newFavorites;
       if (currentFavorites.includes(businessId)) {
-        const newFavorites = currentFavorites.filter((id) => id !== businessId);
-        await setDoc(userFavRef, {
-          negocios: newFavorites,
-          ultimaActualizacion: new Date(),
-        });
-        updateFavoriteButton(businessId, false);
+        newFavorites = currentFavorites.filter((id) => id !== businessId);
       } else {
-        currentFavorites.push(businessId);
-        await setDoc(userFavRef, {
-          negocios: currentFavorites,
-          ultimaActualizacion: new Date(),
-        });
-        updateFavoriteButton(businessId, true);
+        newFavorites = [...currentFavorites, businessId];
       }
+
+      await setDoc(userFavRef, {
+        negocios: newFavorites,
+        ultimaActualizacion: new Date(),
+      });
+
+      // Actualizar estado local
+      setFavorites(newFavorites);
     } catch (error) {
       console.error("Error gestionando favorito:", error);
     }
   };
 
-  const updateFavoriteButton = (businessId, isFavorite) => {
-    const button = document.getElementById(`btn-fav-${businessId}`);
-    if (button) {
-      if (isFavorite) {
-        button.innerHTML = '<i class="bi bi-heart-fill"></i>';
-        button.className = "btn-favorito favorito-activo";
-      } else {
-        button.innerHTML = '<i class="bi bi-heart"></i>';
-        button.className = "btn-favorito favorito-inactivo";
-      }
-    }
-  };
-
-  const checkFavoriteStatus = async (businessId) => {
-    if (!auth.currentUser) return;
-
-    try {
-      const userFavRef = doc(
-        firestore,
-        "ubicate",
-        "usuarios",
-        "favoritos",
-        auth.currentUser.uid
-      );
-      const favDoc = await getDoc(userFavRef);
-
-      if (favDoc.exists()) {
-        const favorites = favDoc.data().negocios || [];
-        const isFavorite = favorites.includes(businessId);
-        updateFavoriteButton(businessId, isFavorite);
-      }
-    } catch (error) {
-      console.error("Error verificando favorito:", error);
-    }
+  const isFavorite = (businessId) => {
+    return favorites.includes(businessId);
   };
 
   const handleLogout = async () => {
@@ -772,36 +764,32 @@ function Home() {
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={handleSearchKeyPress}
         />
+
+        <div className="h2-inicio">
+          <h2 className="titulo">o</h2>
+        </div>
+
+        {/* Filtro por categoría */}
+        <div className="search-container">
+          <select
+            id="categoriaFiltro"
+            className="select-categoria"
+            title="Filtrar por categoría"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <button onClick={buscarDireccion} className="search-btn">
           Buscar
         </button>
       </div>
-      {/* Filtro por categoría */}
-      <div className="search-container">
-        <select
-          id="categoriaFiltro"
-          className="select-categoria"
-          title="Filtrar por categoría"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          {categories.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
 
-        {/* Indicador de ubicación en tiempo real */}
-        {isWatchingLocation && (
-          <div className="location-status">
-            <i className="bi bi-geo-alt-fill text-success"></i>
-            <small className="text-white">
-              Ubicación en tiempo real activa
-            </small>
-          </div>
-        )}
-      </div>
       {/* Mapa */}
       <div id="map" style={{ height: "55vh", width: "100%", zIndex: 1 }}>
         <MapContainer
@@ -825,11 +813,34 @@ function Home() {
               ]}
               icon={getCategoryIcon(business.categoria)}
             >
-              <Popup onOpen={() => checkFavoriteStatus(business.id)}>
+              <Popup>
                 <div
                   className="leaflet-popup-content"
-                  style={{ minWidth: "200px" }}
+                  style={{ minWidth: "200px", position: "relative" }}
                 >
+                  {/* Botón de favoritos arriba a la derecha */}
+                  <div className="popup-favorito-top">
+                    <button
+                      className={`btn-favorito ${
+                        isFavorite(business.id)
+                          ? "favorito-activo"
+                          : "favorito-inactivo"
+                      }`}
+                      onClick={() => toggleFavorite(business.id)}
+                      title={
+                        isFavorite(business.id)
+                          ? "Quitar de favoritos"
+                          : "Agregar a favoritos"
+                      }
+                    >
+                      <i
+                        className={`bi ${
+                          isFavorite(business.id) ? "bi-heart-fill" : "bi-heart"
+                        }`}
+                      ></i>
+                    </button>
+                  </div>
+
                   <div className="popup-title">{business.nombre}</div>
                   <div className="popup-info">
                     <i className="bi bi-tag"></i>{" "}
@@ -849,17 +860,6 @@ function Home() {
                       {business.descripcion}
                     </div>
                   )}
-                  <div className="popup-favorito">
-                    <button
-                      id={`btn-fav-${business.id}`}
-                      className="btn-favorito favorito-inactivo"
-                      onClick={() => toggleFavorite(business.id)}
-                    >
-                      <i className="bi bi-heart"></i>
-                    </button>
-                    <br />
-                    <small>Agregar a favoritos</small>
-                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -885,6 +885,28 @@ function Home() {
           ) : (
             filteredBusinesses.map((business) => (
               <div key={business.id} className="business-card">
+                {/* Botón de favoritos arriba a la derecha en la tarjeta */}
+                <div className="business-card-favorito-top">
+                  <button
+                    className={`btn-favorito-card ${
+                      isFavorite(business.id)
+                        ? "favorito-card-activo"
+                        : "favorito-card-inactivo"
+                    }`}
+                    onClick={() => toggleFavorite(business.id)}
+                    title={
+                      isFavorite(business.id)
+                        ? "Quitar de favoritos"
+                        : "Agregar a favoritos"
+                    }
+                  >
+                    <i
+                      className={`bi ${
+                        isFavorite(business.id) ? "bi-heart-fill" : "bi-heart"
+                      }`}
+                    ></i>
+                  </button>
+                </div>
                 <h5>{business.nombre}</h5>
                 <p>
                   <i className="bi bi-tag"></i> {business.categoria}
@@ -907,12 +929,6 @@ function Home() {
                     className="btn btn-sm btn-outline-primary"
                   >
                     <i className="bi bi-geo-alt"></i> Ver en mapa
-                  </button>
-                  <button
-                    onClick={() => toggleFavorite(business.id)}
-                    className="btn btn-sm btn-outline-danger"
-                  >
-                    <i className="bi bi-heart"></i> Favorito
                   </button>
                 </div>
               </div>
@@ -975,12 +991,104 @@ function Home() {
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
+        .business-card {
+          margin-bottom: 15px;
+          padding: 15px;
+          border-radius: 10px;
+          background: #fff;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+          border-left: 4px solid #4285f4;
+          position: relative; /* Necesario para posicionar el botón absolutamente */
+          padding-top: 50px; /* Espacio para el botón en la parte superior */
+        }
+
+        .business-card-favorito-top {
+          position: absolute;
+          top: 10px;
+          right: 15px;
+          z-index: 10;
+        }
+
+        .btn-favorito-card {
+          background: none;
+          border: none;
+          font-size: 1.3rem;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          padding: 8px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .btn-favorito-card:hover {
+          transform: scale(1.15);
+        }
+
+        .favorito-card-inactivo {
+          color: #8e99a5;
+          background-color: rgba(142, 153, 165, 0.08);
+          border: 2px solid #e1e5e9;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .favorito-card-inactivo:hover {
+          background-color: rgba(142, 153, 165, 0.15);
+          color: #6c757d;
+          border-color: #d1d9e0;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .favorito-card-activo {
+          color: #ffffff;
+          background: linear-gradient(135deg, #ff3366, #ff6b6b);
+          border: 2px solid #ff3366;
+          box-shadow: 0 6px 20px rgba(255, 51, 102, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+          animation: heartBeat 1.5s ease-in-out;
+        }
+
+        .favorito-card-activo:hover {
+          background: linear-gradient(135deg, #ff1a54, #ff5252);
+          box-shadow: 0 8px 25px rgba(255, 51, 102, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+          transform: scale(1.15);
+        }
+
+        .business-card h5 {
+          color: #4285f4;
+          margin-bottom: 5px;
+          padding-right: 50px; /* Espacio para el botón */
+        }
+
+        .business-card p {
+          margin-bottom: 8px;
+          padding-right: 10px;
+        }
+
         .input-direccion {
           width: 200px;
           padding: 10px;
           border: 1px solid #ddd;
           border-radius: 5px;
           margin-left: 25px;
+        }
+
+        .titulo {
+          color: white;
+          text-align: center;
+          margin-bottom: 10px;
+          font-seize: 12pt;
+        }
+
+        .h2-inicio {
+          margin: 0 10px;
+          margin-left: 10px;
         }
 
         .search-btn {
@@ -1047,51 +1155,137 @@ function Home() {
 
         .leaflet-popup-content {
           min-width: 200px;
-        }
-
-        .popup-title {
-          font-weight: bold;
-          color: #4285f4;
-          margin-bottom: 5px;
-        }
-
-        .popup-info {
-          margin: 3px 0;
-          font-size: 0.9rem;
-        }
-
-        .popup-info i {
-          width: 15px;
-          text-align: center;
-          margin-right: 5px;
-          color: #6c757d;
-        }
-
-        .popup-favorito {
-          text-align: center;
-          margin-top: 10px;
+          position: relative;
           padding-top: 10px;
-          border-top: 1px solid #eee;
+        }
+
+        .popup-favorito-top {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          z-index: 10;
         }
 
         .btn-favorito {
           background: none;
           border: none;
-          font-size: 1.2rem;
+          font-size: 1.3rem;
           cursor: pointer;
-          transition: transform 0.2s;
-          padding: 5px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          padding: 8px;
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
         }
 
         .btn-favorito:hover {
-          transform: scale(1.2);
-        }
-
-        .favorito-activo {
-          color: #dc3545;
+          transform: scale(1.15);
         }
 
         .favorito-inactivo {
+          color: #8e99a5;
+          background-color: rgba(142, 153, 165, 0.08);
+          border: 2px solid #e1e5e9;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .favorito-inactivo:hover {
+          background-color: rgba(142, 153, 165, 0.15);
+          color: #6c757d;
+          border-color: #d1d9e0;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .favorito-activo {
+          color: #ffffff;
+          background: linear-gradient(135deg, #ff3366, #ff6b6b);
+          border: 2px solid #ff3366;
+          box-shadow: 0 6px 20px rgba(255, 51, 102, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+          animation: heartBeat 1.5s ease-in-out;
+        }
+
+        .favorito-activo:hover {
+          background: linear-gradient(135deg, #ff1a54, #ff5252);
+          box-shadow: 0 8px 25px rgba(255, 51, 102, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+          transform: scale(1.15);
+        }
+
+        @keyframes heartBeat {
+          0% {
+            transform: scale(1);
+          }
+          15% {
+            transform: scale(1.2);
+          }
+          30% {
+            transform: scale(1);
+          }
+          45% {
+            transform: scale(1.1);
+          }
+          60% {
+            transform: scale(1);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+
+        .favorito-activo::after {
+          content: "";
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          right: -4px;
+          bottom: -4px;
+          background: linear-gradient(135deg, #ff3366, #ff6b6b);
+          border-radius: 50%;
+          z-index: -1;
+          opacity: 0;
+          animation: pulseRing 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseRing {
+          0% {
+            opacity: 0.8;
+            transform: scale(0.8);
+          }
+          50% {
+            opacity: 0.4;
+            transform: scale(1.1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.3);
+          }
+        }
+
+        .popup-title {
+          font-weight: bold;
+          color: #4285f4;
+          margin-bottom: 8px;
+          padding-right: 50px;
+          font-size: 1.1rem;
+          line-height: 1.3;
+        }
+
+        .popup-info {
+          margin: 4px 0;
+          font-size: 0.9rem;
+          line-height: 1.4;
+        }
+
+        .popup-info i {
+          width: 16px;
+          text-align: center;
+          margin-right: 6px;
           color: #6c757d;
         }
 

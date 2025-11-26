@@ -181,9 +181,6 @@ function Profile() {
               <Link to="/edit-profile" className="btn btn-outline-secondary">
                 <i className="bi bi-pencil"></i> Editar perfil
               </Link>
-              <Button variant="outline-danger" onClick={handleLogout}>
-                <i className="bi bi-box-arrow-right"></i> Cerrar Sesión
-              </Button>
             </div>
           </Col>
         </Row>
