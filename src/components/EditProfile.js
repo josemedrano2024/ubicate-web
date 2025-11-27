@@ -1,4 +1,3 @@
-// src/components/EditProfile.js
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -9,8 +8,8 @@ import {
   Accordion,
   Row,
   Col,
-} from "react-bootstrap"; // Añadidos Row y Col
-import { Link } from "react-router-dom";
+} from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom"; // Agregar useNavigate
 import { auth, firestore } from "../services/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import {
@@ -36,6 +35,7 @@ function EditProfile() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate(); // Hook para redirección
 
   useEffect(() => {
     loadUserData();
@@ -116,6 +116,11 @@ function EditProfile() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+
+      // Redirigir al perfil después de 1.5 segundos
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
     } catch (error) {
       console.error("Error actualizando perfil:", error);
       setError(error.message);
@@ -152,7 +157,14 @@ function EditProfile() {
             </h5>
           </Card.Header>
           <Card.Body>
-            {message && <Alert variant="success">{message}</Alert>}
+            {message && (
+              <Alert variant="success">
+                {message}
+                <div className="mt-2">
+                  <small>Redirigiendo al perfil...</small>
+                </div>
+              </Alert>
+            )}
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Form onSubmit={handleSubmit}>

@@ -1,4 +1,3 @@
-// src/components/Login.js
 import React, { useState } from "react";
 import { Alert } from "react-bootstrap";
 import { auth } from "../services/firebase";

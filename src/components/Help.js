@@ -1,11 +1,9 @@
-// src/components/Help.js
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Alert } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { auth } from "../services/firebase";
 import { signOut } from "firebase/auth";
 
-// Importar las imágenes - AGREGAR ESTOS IMPORTS
 import usuarioImg from "../assets/usuario.png";
 import logoImg from "../assets/Logo.jpeg";
 

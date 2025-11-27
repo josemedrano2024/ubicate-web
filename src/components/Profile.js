@@ -1,4 +1,3 @@
-// src/components/Profile.js
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -148,15 +147,6 @@ function Profile() {
                   <div className="d-flex justify-content-between border-bottom py-2">
                     <strong>Tipo de usuario:</strong>
                     <span>{isAnonymous ? "Invitado" : "Registrado"}</span>
-                  </div>
-                  <div className="d-flex justify-content-between border-bottom py-2">
-                    <strong>ID de usuario:</strong>
-                    <span
-                      className="text-truncate"
-                      style={{ maxWidth: "150px" }}
-                    >
-                      {user?.uid}
-                    </span>
                   </div>
                 </div>
 
