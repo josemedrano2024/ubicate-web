@@ -220,8 +220,8 @@ function Profile() {
         }
 
         .btn-outline-secondary {
-          border-color: #6c757d;
-          color: #6c757d;
+          background-color: white;
+          font-color: black;
         }
 
         .btn-outline-secondary:hover {

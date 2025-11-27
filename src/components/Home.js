@@ -790,8 +790,8 @@ function Home() {
         </button>
       </div>
 
-      {/* Mapa */}
-      <div id="map" style={{ height: "55vh", width: "100%", zIndex: 1 }}>
+      {/* Mapa más pequeño */}
+      <div id="map" style={{ height: "40vh", width: "100%", zIndex: 1 }}>
         <MapContainer
           center={userLocation}
           zoom={16}
@@ -867,16 +867,18 @@ function Home() {
         </MapContainer>
       </div>
 
-      {/* Lista de negocios */}
+      {/* Lista de negocios con barra de desplazamiento */}
       <div className="business-list-container">
         <h4
           style={{
             color: "white",
+            marginBottom: "15px",
           }}
         >
-          <i className="bi bi-geo-alt"></i> Negocios cercanos
+          <i className="bi bi-geo-alt"></i> Negocios y servicios cercanos (
+          {resultCount})
         </h4>
-        <div id="business-list">
+        <div className="business-list-scrollable">
           {filteredBusinesses.length === 0 ? (
             <div className="alert alert-info">
               No se encontraron negocios cercanos dentro de {SEARCH_RADIUS_KM}
@@ -989,6 +991,46 @@ function Home() {
           padding: 15px;
           background: #0b4bb0;
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .business-list-container {
+          padding: 20px;
+          background-color: #0b4bb0;
+          border-radius: 15px 15px 0 0;
+          margin-top: 0;
+          position: relative;
+          z-index: 2;
+          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+          height: calc(
+            60vh - 80px
+          ); /* Altura calculada para ocupar el espacio restante */
+          display: flex;
+          flex-direction: column;
+        }
+
+        .business-list-scrollable {
+          overflow-y: auto;
+          flex: 1;
+          padding-right: 5px;
+        }
+
+        /* Estilos para la barra de desplazamiento */
+        .business-list-scrollable::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .business-list-scrollable::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+
+        .business-list-scrollable::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 10px;
+        }
+
+        .business-list-scrollable::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.5);
         }
 
         .business-card {
@@ -1127,16 +1169,6 @@ function Home() {
           padding: 8px 12px;
           background: rgba(255, 255, 255, 0.1);
           border-radius: 20px;
-        }
-
-        .business-list-container {
-          padding: 20px;
-          background-color: #0b4bb0;
-          border-radius: 15px 15px 0 0;
-          margin-top: -20px;
-          position: relative;
-          zindex: 2;
-          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         }
 
         .business-card {
@@ -1399,6 +1431,10 @@ function Home() {
           .location-status {
             width: 100%;
             justify-content: center;
+          }
+
+          .business-list-container {
+            height: calc(60vh - 100px);
           }
         }
       `}</style>
