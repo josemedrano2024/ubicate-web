@@ -13,7 +13,14 @@ import {
 import { signOut } from "firebase/auth";
 
 function Profile() {
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({
+    nombre: "",
+    email: "",
+    telefono: "",
+    direccion: "",
+    empresa: "",
+    cargo: "",
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +36,7 @@ function Profile() {
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
-          setUserData(userDoc.data());
+          setUserData((prev) => ({ ...prev, ...userDoc.data() }));
         } else {
           // Si no existe en "users", buscar en la colección de negocios
           const negociosQuery = query(
@@ -41,9 +48,12 @@ function Profile() {
 
           if (!querySnapshot.empty) {
             const firstDoc = querySnapshot.docs[0];
-            setUserData(firstDoc.data());
+            setUserData((prev) => ({ ...prev, ...firstDoc.data() }));
           }
         }
+
+        // Siempre asegurar que el email esté actualizado desde auth
+        setUserData((prev) => ({ ...prev, email: user.email || "" }));
       } catch (error) {
         console.error("Error obteniendo datos del usuario:", error);
       } finally {
@@ -59,6 +69,11 @@ function Profile() {
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
+  };
+
+  // Función para formatear campos vacíos
+  const formatField = (value) => {
+    return value || "No proporcionado";
   };
 
   if (loading) {
@@ -115,35 +130,47 @@ function Profile() {
                 <img
                   id="user-avatar"
                   src={`https://ui-avatars.com/api/?name=${
-                    user?.email || "Usuario"
+                    userData.nombre || user?.email || "Usuario"
                   }&size=100&background=007bff&color=fff`}
                   alt="Avatar"
                   className="user-avatar mb-3"
                 />
 
-                <h2 className="text-center mb-4">Información del Usuario</h2>
+                <h2 className="text-center mb-4">Información del Perfil</h2>
 
                 <div className="user-details">
                   <div className="d-flex justify-content-between border-bottom py-2">
-                    <strong>Nombre:</strong>
-                    <span>
-                      {userData.nombre ||
-                        user?.email?.split("@")[0] ||
-                        "No proporcionado"}
-                    </span>
+                    <strong>Nombre completo:</strong>
+                    <span>{formatField(userData.nombre)}</span>
                   </div>
+
                   <div className="d-flex justify-content-between border-bottom py-2">
                     <strong>Email:</strong>
-                    <span>{user?.email || "No proporcionado"}</span>
+                    <span>{formatField(userData.email)}</span>
                   </div>
+
                   <div className="d-flex justify-content-between border-bottom py-2">
                     <strong>Teléfono:</strong>
-                    <span>
-                      {userData.telefono ||
-                        userData.phoneNumber ||
-                        "No proporcionado"}
-                    </span>
+                    <span>{formatField(userData.telefono)}</span>
                   </div>
+
+                  <div className="d-flex justify-content-between border-bottom py-2">
+                    <strong>Empresa:</strong>
+                    <span>{formatField(userData.empresa)}</span>
+                  </div>
+
+                  <div className="d-flex justify-content-between border-bottom py-2">
+                    <strong>Cargo/Posición:</strong>
+                    <span>{formatField(userData.cargo)}</span>
+                  </div>
+
+                  <div className="border-bottom py-2">
+                    <strong>Dirección:</strong>
+                    <div className="mt-1">
+                      {formatField(userData.direccion)}
+                    </div>
+                  </div>
+
                   <div className="d-flex justify-content-between border-bottom py-2">
                     <strong>Tipo de usuario:</strong>
                     <span>{isAnonymous ? "Invitado" : "Registrado"}</span>
@@ -211,7 +238,7 @@ function Profile() {
 
         .btn-outline-secondary {
           background-color: white;
-          font-color: black;
+          color: black;
         }
 
         .btn-outline-secondary:hover {
@@ -226,6 +253,15 @@ function Profile() {
 
           .user-details {
             font-size: 0.9rem;
+          }
+
+          .user-details div {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .user-details div strong {
+            margin-bottom: 5px;
           }
         }
       `}</style>
