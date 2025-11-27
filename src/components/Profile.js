@@ -92,7 +92,7 @@ function Profile() {
       }}
     >
       <Container>
-        {/* Botón Volver - Posicionado correctamente */}
+        {/* Botón Volver*/}
         <div className="mb-4">
           <Link
             to="/home"
